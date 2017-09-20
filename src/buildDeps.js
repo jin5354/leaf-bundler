@@ -39,6 +39,11 @@ async function parseModule(depTree, moduleName, context, options) {
   let absoluteFileName = await _resolve(moduleName, context, options)
   // 用模块的绝对路径作为模块的键值,保证唯一性
 
+  // 去重
+  if(depTree.modules[absoluteFileName]) {
+    return depTree
+  }
+
   module = depTree.modules[absoluteFileName] = {
     id: mid++,
     filename: absoluteFileName,
@@ -72,8 +77,6 @@ async function parseModule(depTree, moduleName, context, options) {
       requireItem.id = depTree.mapModuleNameToId[requireItem.name]
     })
   }
-
-  //console.log(depTree)
 
   return depTree
 }
