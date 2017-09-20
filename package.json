@@ -1,13 +1,14 @@
 {
   "name": "leaf-bundler",
   "version": "0.0.1",
-  "description": "",
+  "description": "commonjs module bundler.",
   "main": "index.js",
   "bin": {
     "leaf-bundler": "bin/leaf-bundler"
   },
   "scripts": {
-    "lint": "eslint --fix --config .eslintrc.json bin example src test"
+    "lint": "eslint --fix --config .eslintrc.json bin example src test",
+    "test": "ava"
   },
   "repository": {
     "type": "git",
@@ -20,6 +21,7 @@
   },
   "homepage": "https://github.com/jin5354/leaf-bundler#readme",
   "devDependencies": {
+    "ava": "^0.22.0",
     "eslint-config-wdfe": "^0.3.2",
     "webpack": "^3.6.0"
   },

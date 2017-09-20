@@ -4,9 +4,6 @@
  * @returns {string} 替换模块名之后的模块内容字符串
  */
 module.exports = function(module) {
-  if(module.id === 0) {
-    console.log(JSON.stringify(module, {}, 2))
-  }
   let replaces = []
   let source = module.source
   if (!module.requires || !module.requires.length) {
@@ -28,10 +25,6 @@ module.exports = function(module) {
   replaces.sort((a, b) => {
     return b.from - a.from
   })
-
-  if(module.id === 0) {
-    console.log(replaces)
-  }
 
   // 逐个替换模块名为模块id
   replaces.forEach(replace => {

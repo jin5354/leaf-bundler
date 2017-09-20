@@ -1,7 +1,13 @@
-const a = require('./a.js')
-const b = require('./b.js')
-const c = require('./a.js')()
-const d = require('./a.js')(require('./b.js'))
+/*
+ * @Filename: index.js
+ * @Author: jin5354
+ * @Email: xiaoyanjinx@gmail.com
+ * @Last Modified time: 2017-08-30 19:00:49
+ */
 
-a()
-b()
+const test = require('ava')
+
+test('basis test 基本测试', t => {
+
+  t.is(1, 1)
+})
