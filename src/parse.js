@@ -7,7 +7,9 @@
 const esprima = require('esprima')
 
 function parse(source) {
-  let ast = esprima.parse(source)
+  let ast = esprima.parse(source, {
+    range: true
+  })
   let module = {}
   walkStatements(module, ast.body)
   module.source = source

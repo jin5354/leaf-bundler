@@ -1,6 +1,6 @@
 const fs = require('fs')
 const path = require('path')
-const buildDeps = require('./buildDeps.js')
+const collectDeps = require('./collectDeps.js')
 const generateOutputJS = require('./generateOutputJS.js')
 
 async function bundle(config, configPath) {
@@ -11,7 +11,7 @@ async function bundle(config, configPath) {
   let outputFilePath = path.resolve(configDirname, outputFileStr)
   let entryDirname = path.dirname(entryFilePath)
 
-  let depTree = await buildDeps(entryFileStr, {
+  let depTree = await collectDeps(entryFileStr, {
     input: entryFilePath,
     context: entryDirname,
     output: path.resolve(configDirname, outputFileStr)
