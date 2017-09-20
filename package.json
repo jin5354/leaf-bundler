@@ -1,0 +1,30 @@
+{
+  "name": "leaf-bundler",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "bin": {
+    "leaf-bundler": "bin/leaf-bundler"
+  },
+  "scripts": {
+    "lint": "eslint --fix --config .eslintrc.json bin example src test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jin5354/leaf-bundler.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jin5354/leaf-bundler/issues"
+  },
+  "homepage": "https://github.com/jin5354/leaf-bundler#readme",
+  "devDependencies": {
+    "eslint-config-wdfe": "^0.3.2",
+    "webpack": "^3.6.0"
+  },
+  "dependencies": {
+    "commander": "^2.11.0",
+    "esprima": "^4.0.0"
+  }
+}

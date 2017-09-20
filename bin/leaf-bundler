@@ -1,0 +1,18 @@
+#!/usr/bin/env node
+let program = require('commander')
+let path = require('path')
+let bundler = require('../src/index.js')
+
+program
+  .version(require('../package').version)
+  .usage('[options] <file ...>')
+  .option('-c, --config <file>', 'bundle using config file')
+  .parse(process.argv)
+
+let config = ''
+
+if(program.config) {
+  config = require(path.resolve(program.config))
+  bundler(config, path.resolve(program.config))
+}
+

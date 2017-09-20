@@ -1,0 +1,16 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "type": "node",
+        "request": "launch",
+        "name": "Launch Program",
+        "program": "${workspaceRoot}/bin/leaf-bundler",
+        "cwd": "${workspaceRoot}",
+        "runtimeExecutable": null,
+        "runtimeArgs": [
+          "bin/leaf-bundler", "--config", "test/bundler.config.js"
+        ]
+      }
+    ]
+  }
