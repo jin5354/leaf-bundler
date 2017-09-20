@@ -1,17 +1,18 @@
 const writeChunk = require('./writeChunk.js')
 
 const BOOTSTRAP_STRING = `/******/(function(modules) {
-  /******/	var installedModules = {};
+  /******/	const installedModules = {}
   /******/	function require(moduleId) {
-  /******/		if(installedModules[moduleId])
-  /******/			return installedModules[moduleId].exports;
-  /******/		var module = installedModules[moduleId] = {
+  /******/		if(installedModules[moduleId]) {
+  /******/       return installedModules[moduleId].exports
+  /******/    }			
+  /******/		const module = installedModules[moduleId] = {
   /******/			exports: {}
-  /******/		};
-  /******/		modules[moduleId](module, module.exports, require);
-  /******/		return module.exports;
+  /******/		}
+  /******/		modules[moduleId](module, module.exports, require)
+  /******/		return module.exports
   /******/	}
-  /******/	return require(0);
+  /******/	return require(0)
   /******/})`
 
 function generateOutputJS(depTree) {
