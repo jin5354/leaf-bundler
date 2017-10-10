@@ -14,6 +14,7 @@ module.exports = async function(mainModule, options) {
   }
 
   depTree = await parseModule(depTree, mainModule, options, options.input)
+
   return depTree
 }
 
@@ -27,7 +28,7 @@ module.exports = async function(mainModule, options) {
 async function parseModule(depTree, moduleName, options, filename) {
   let module
   // 查找模块
-  let absoluteFileName = await _resolve(moduleName, options.context, filename)
+  let absoluteFileName = await _resolve(moduleName, filename)
   // 用模块的绝对路径作为模块的键值,保证唯一性
 
   // 去重
@@ -43,25 +44,25 @@ async function parseModule(depTree, moduleName, options, filename) {
 
   let source = fs.readFileSync(absoluteFileName).toString()
 
-  let parsedModule = parse(source)
+  let parsedModule = parse(source, absoluteFileName)
 
   module.requires = parsedModule.requires || []
   module.asyncs = parsedModule.asyncs || []
   module.source = parsedModule.source
 
   // 写入映射关系
-  depTree.mapModuleNameToId[module.name] = module.id
+  depTree.mapModuleNameToId[module.filename] = module.id
   depTree.modulesById[module.id] = module
 
   // 如果此模块有依赖的模块,采取深度遍历的原则,遍历解析其依赖的模块
   let requireModules = parsedModule.requires
   if (requireModules && requireModules.length > 0) {
     for (let require of requireModules) {
-      depTree = await parseModule(depTree, require.name, options, filename)
+      depTree = await parseModule(depTree, require.name, options, absoluteFileName)
     }
     // 写入依赖模块的id,生成目标JS文件的时候会用到
     requireModules.forEach(requireItem => {
-      requireItem.id = depTree.mapModuleNameToId[requireItem.name]
+      requireItem.id = depTree.mapModuleNameToId[requireItem.filename]
     })
   }
 

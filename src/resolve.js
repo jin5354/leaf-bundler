@@ -12,6 +12,6 @@ const path = require('path')
  * @param {string} moduleIdentifier 模块的标志,可能是模块名/相对路径/绝对路径
  * @param {string} context 上下文,入口js所在目录
  */
-module.exports = function(moduleIdentifier, context, filePath) {
+module.exports = function(moduleIdentifier, filePath) {
   return path.resolve(path.dirname(filePath), moduleIdentifier)
 }

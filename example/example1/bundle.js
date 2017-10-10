@@ -16,8 +16,6 @@
 
 const a = require(/* ./a.js */1)
 const b = require(/* ./b.js */2)
-const c = require(/* ./a.js */1)()
-const d = require(/* ./a.js */1)(require(/* ./b.js */2))
 
 a()
 b()
@@ -66,11 +64,25 @@ module.exports = c
 /******/
 /******/4: function(module, exports, require) {
 
+const e = require(/* ./e.js */5)
+
 function d() {
+  e()
   console.log('d')
 }
 
 module.exports = d
+
+
+/******/},
+/******/
+/******/5: function(module, exports, require) {
+
+function e() {
+  console.log('module e function')
+}
+
+module.exports = e
 
 
 /******/},

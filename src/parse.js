@@ -1,24 +1,23 @@
 /**
- * @file 解析模块包含的依赖
- * @author youngwind
  * @content 使用esprima将模块文件解析成AST,然后逐个语句遍历,找到该模块都依赖了哪些模块
  */
 
 const esprima = require('esprima')
+const resolve = require('./resolve.js')
 
-function parse(source) {
+function parse(source, path) {
   let ast = esprima.parse(source, {
     range: true
   })
   let module = {}
-  walkStatements(module, ast.body)
+  walkStatements(module, ast.body, path)
   module.source = source
   return module
 }
 
-function walkStatements(module, astTree) {
+function walkStatements(module, astTree, path) {
   astTree.forEach(statement => {
-    walkStatement(module, statement)
+    walkStatement(module, statement, path)
   })
 }
 
@@ -27,18 +26,18 @@ function walkStatements(module, astTree) {
  * @param {object} module  模块对象
  * @param  {object} statement AST语法树
  */
-function walkStatement(module, statement) {
+function walkStatement(module, statement, path) {
   switch (statement.type) {
     case 'BlockStatement':
-      walkStatements(module, statement.body)
+      walkStatements(module, statement.body, path)
       break
     case 'VariableDeclaration':
       if (statement.declarations) {
-        walkVariableDeclarators(module, statement.declarations)
+        walkVariableDeclarators(module, statement.declarations, path)
       }
       break
     case 'ExpressionStatement':
-      walkExpression(module, statement.expression)
+      walkExpression(module, statement.expression, path)
       break
   }
 }
@@ -48,10 +47,10 @@ function walkStatement(module, statement) {
  * @param {object} module  模块对象
  * @param {object} declarator
  */
-function walkVariableDeclarators(module, declarators) {
+function walkVariableDeclarators(module, declarators, path) {
   declarators.forEach(declarator => {
     if(declarator.type === 'VariableDeclarator' && declarator.init) {
-      walkExpression(module, declarator.init)
+      walkExpression(module, declarator.init, path)
     }
   })
 }
@@ -61,7 +60,7 @@ function walkVariableDeclarators(module, declarators) {
  * @param {object} module  模块对象
  * @param {object} expression 表达式
  */
-function walkExpression(module, expression) {
+function walkExpression(module, expression, path) {
   switch (expression.type) {
     case 'CallExpression':
       // 处理普通的require
@@ -71,31 +70,32 @@ function walkExpression(module, expression) {
         let param = Array.from(expression.arguments)[0]
         module.requires.push({
           name: param.value,
+          filename: resolve(param.value, path),
           nameRange: param.range
         })
       }
 
       // 处理匿名表达式,如 require('b')()
       if (expression.callee && !expression.callee.name) {
-        walkExpression(module, expression.callee)
+        walkExpression(module, expression.callee, path)
 
         // 处理连续调用的匿名表达式,如 require('a')(require('b'));
         if(expression.arguments && expression.arguments[0] && expression.arguments[0].type === 'CallExpression') {
-          walkExpressions(module, expression.arguments)
+          walkExpressions(module, expression.arguments, path)
         }
       }
 
       break
     case 'FunctionExpression':
       if (expression.body.type === 'BlockStatement') {
-        walkStatement(module, expression.body)
+        walkStatement(module, expression.body, path)
       }
   }
 }
 
-function walkExpressions(module, expressions) {
+function walkExpressions(module, expressions, path) {
   expressions.forEach(expression => {
-    walkExpression(module, expression)
+    walkExpression(module, expression, path)
   })
 }
 
