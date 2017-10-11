@@ -75,6 +75,35 @@ function walkExpression(module, expression, path) {
         })
       }
 
+      // 处理require.ensure的依赖参数部分
+      if (expression.callee && expression.callee.type === 'MemberExpression'
+        && expression.callee.object.type === 'Identifier' && expression.callee.object.name === 'require'
+        && expression.callee.property.type === 'Identifier' && expression.callee.property.name === 'ensure'
+        && expression.arguments && expression.arguments.length >= 1) {
+
+        let param = parseStringArray(expression.arguments[0])
+
+        let newModule = {
+          requires: [],
+          namesRange: expression.arguments[0].range
+        }
+
+        param.forEach(module => {
+          newModule.requires.push({
+            name: module,
+            filename: resolve(module, path)
+          })
+        })
+
+        module.asyncs = module.asyncs || []
+        module.asyncs.push(newModule)
+
+        // 处理require.ensure的函数体部分
+        if(expression.arguments.length > 1) {
+          walkExpression(module, expression.arguments[1], path)
+        }
+      }
+
       // 处理匿名表达式,如 require('b')()
       if (expression.callee && !expression.callee.name) {
         walkExpression(module, expression.callee, path)
@@ -87,6 +116,7 @@ function walkExpression(module, expression, path) {
 
       break
     case 'FunctionExpression':
+    case 'ArrowFunctionExpression':
       if (expression.body.type === 'BlockStatement') {
         walkStatement(module, expression.body, path)
       }
@@ -97,6 +127,20 @@ function walkExpressions(module, expressions, path) {
   expressions.forEach(expression => {
     walkExpression(module, expression, path)
   })
+}
+
+/**
+ * 将require.ensure中的依赖数组的AST转换成真正的数组
+ * @param expression
+ * @returns {Array} 依赖模块数组
+ */
+function parseStringArray(expression) {
+  switch (expression.type) {
+    case 'ArrayExpression':
+      return (expression.elements || []).map(ele => {
+        return ele.value
+      })
+  }
 }
 
 module.exports = parse

@@ -1,11 +1,9 @@
-const writeChunk = require('./writeChunk.js')
-
-const BOOTSTRAP_STRING = `/******/(function(modules) {
+module.exports = `/******/(function(modules) {
   /******/	const installedModules = {}
   /******/	function require(moduleId) {
   /******/		if(installedModules[moduleId]) {
   /******/       return installedModules[moduleId].exports
-  /******/    }			
+  /******/    }
   /******/		const module = installedModules[moduleId] = {
   /******/			exports: {}
   /******/		}
@@ -14,16 +12,3 @@ const BOOTSTRAP_STRING = `/******/(function(modules) {
   /******/	}
   /******/	return require(0)
   /******/})`
-
-function generateOutputJS(depTree) {
-  let buffer = []
-  buffer.push(BOOTSTRAP_STRING)
-  buffer.push('/******/({\n')
-  let chunks = writeChunk(depTree)
-  buffer.push(chunks)
-  buffer.push('/******/})')
-  buffer = buffer.join('')
-  return buffer
-}
-
-module.exports = generateOutputJS

@@ -13,8 +13,8 @@ module.exports = async function(mainModule, options) {
     modulesById: {} // 通过模块id索引模块
   }
 
-  depTree = await parseModule(depTree, mainModule, options, options.input)
-
+  depTree = await parseModule(depTree, mainModule, options, options.input) // 依赖收集与分析
+  depTree = buildTree(depTree) // 分析 chunk 关系
   return depTree
 }
 
@@ -66,5 +66,110 @@ async function parseModule(depTree, moduleName, options, filename) {
     })
   }
 
+  // 处理该模块依赖的 async 模块
+  let asyncModules = parsedModule.asyncs
+  if (asyncModules && asyncModules.length > 0) {
+    for (let asyncModule of asyncModules) {
+      let requires = asyncModule.requires
+      for (let require of requires) {
+        // 已经处理过的模块,不再处理
+        if(depTree.mapModuleNameToId[require.name]) {continue}
+        depTree = await parseModule(depTree, require.name, options, absoluteFileName)
+      }
+    }
+  }
+
+  return depTree
+}
+
+/**
+ * 从depTree.modules中构建出depTree.chunks
+ * @param {object} depTree 依赖关系对象
+ * @returns {*}
+ */
+function buildTree(depTree) {
+  addChunk(depTree, depTree.modulesById[0])
+
+  for (let chunkId in depTree.chunks) {
+    if(!depTree.chunks.hasOwnProperty(chunkId)) {continue}
+    depTree = removeParentsModules(depTree, depTree.chunks[chunkId])
+  }
+
+  return depTree
+}
+
+/**
+ * 新建chunk
+ * @param {object} depTree
+ * @returns {{id: number, modules: {}}}
+ */
+function addChunk(depTree, chunkStartPoint) {
+  let chunk = {
+    id: cid++,
+    modules: {}
+  }
+  depTree.chunks[chunk.id] = chunk
+  if (chunkStartPoint) {
+    chunkStartPoint.chunkId = chunk.id //打标记
+    addModuleToChunk(depTree, chunkStartPoint, chunk.id)
+  }
+  return chunk
+}
+
+/**
+ * 将module添加到chunk中
+ * @param depTree
+ * @param context
+ * @param chunkId
+ */
+function addModuleToChunk(depTree, context, chunkId) {
+  context.chunks = context.chunks || []
+  // context.chunks是某个module在多少个chunks出现过
+  if (context.chunks.indexOf(chunkId) === -1) {
+    context.chunks.push(chunkId)
+    if (context.id !== undefined) {
+      depTree.chunks[chunkId].modules[context.id] = 'include'
+    }
+    //对于 require 的依赖，纳入该 chunk
+    if (context.requires) {
+      context.requires.forEach(requireItem => {
+        if (requireItem.filename) {
+          addModuleToChunk(depTree, depTree.modulesById[depTree.mapModuleNameToId[requireItem.filename]], chunkId)
+        }
+      })
+    }
+    //对于 async 的依赖，新开 chunk
+    if (context.asyncs) {
+      context.asyncs.forEach(context => {
+        let subChunk
+        if (context.chunkId) {
+          subChunk = depTree.chunks[context.chunkId]
+        } else {
+          subChunk = addChunk(depTree, context)
+        }
+        //标记一下自己的父 chunk
+        subChunk.parents = subChunk.parents || []
+        subChunk.parents.push(chunkId)
+      })
+    }
+  }
+}
+
+/**
+ * 将属于父级chunk的module从当前chunk移除出去，标记成 in-parent
+ * @param depTree
+ * @param chunk
+ * @returns {*}
+ */
+function removeParentsModules(depTree, chunk) {
+  if (!chunk.parents) {return depTree}
+  for (let moduleId in chunk.modules) {
+    if (!chunk.modules.hasOwnProperty(moduleId)) {continue}
+    chunk.parents.forEach(parentId => {
+      if (depTree.chunks[parentId].modules[moduleId]) {
+        chunk.modules[moduleId] = 'in-parent'
+      }
+    })
+  }
   return depTree
 }
