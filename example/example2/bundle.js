@@ -38,12 +38,10 @@
 /******/0: function(module, exports, require) {
 
 const a = require(/* ./a.js */1)
-const e = require(/* ./d/e.js */2)
 a()
-e()
 
 require.ensure(1, () => {
-  const b = require(/* ./b.js */3)
+  const b = require(/* ./b.js */2)
   b()
 })
 
@@ -58,59 +56,6 @@ function a() {
 }
 
 module.exports = a
-
-
-/******/},
-/******/
-/******/2: function(module, exports, require) {
-
-function e() {
-  console.log('module e function')
-}
-
-module.exports = e
-
-
-/******/},
-/******/
-/******/3: function(module, exports, require) {
-
-const c = require(/* ./c.js */4)
-
-function b() {
-  c()
-  console.log('module b function')
-}
-
-module.exports = b
-
-
-/******/},
-/******/
-/******/4: function(module, exports, require) {
-
-const d = require(/* ./d/d.js */5)
-
-function c() {
-  d()
-  console.log('c')
-}
-
-module.exports = c
-
-
-/******/},
-/******/
-/******/5: function(module, exports, require) {
-
-const e = require(/* ./e.js */2)
-
-function d() {
-  e()
-  console.log('d')
-}
-
-module.exports = d
 
 
 /******/},

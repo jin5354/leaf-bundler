@@ -14,7 +14,12 @@ module.exports = async function(mainModule, options) {
   }
 
   depTree = await parseModule(depTree, mainModule, options, options.input) // 依赖收集与分析
+
+  //console.log(JSON.stringify(depTree, '', 2))
+
   depTree = buildTree(depTree) // 分析 chunk 关系
+
+  console.log(JSON.stringify(depTree, '', 2))
   return depTree
 }
 
@@ -133,7 +138,7 @@ function addModuleToChunk(depTree, context, chunkId) {
     //对于 require 的依赖，纳入该 chunk
     if (context.requires) {
       context.requires.forEach(requireItem => {
-        if (requireItem.filename) {
+        if (requireItem.filename && !requireItem.async) {
           addModuleToChunk(depTree, depTree.modulesById[depTree.mapModuleNameToId[requireItem.filename]], chunkId)
         }
       })

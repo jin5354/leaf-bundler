@@ -10,14 +10,14 @@ function parse(source, path) {
     range: true
   })
   let module = {}
-  walkStatements(module, ast.body, path)
+  walkStatements(module, ast.body, path, false)
   module.source = source
   return module
 }
 
-function walkStatements(module, astTree, path) {
+function walkStatements(module, astTree, path, async) {
   astTree.forEach(statement => {
-    walkStatement(module, statement, path)
+    walkStatement(module, statement, path, async)
   })
 }
 
@@ -26,18 +26,18 @@ function walkStatements(module, astTree, path) {
  * @param {object} module  模块对象
  * @param  {object} statement AST语法树
  */
-function walkStatement(module, statement, path) {
+function walkStatement(module, statement, path, async) {
   switch (statement.type) {
     case 'BlockStatement':
-      walkStatements(module, statement.body, path)
+      walkStatements(module, statement.body, path, async)
       break
     case 'VariableDeclaration':
       if (statement.declarations) {
-        walkVariableDeclarators(module, statement.declarations, path)
+        walkVariableDeclarators(module, statement.declarations, path, async)
       }
       break
     case 'ExpressionStatement':
-      walkExpression(module, statement.expression, path)
+      walkExpression(module, statement.expression, path, async)
       break
   }
 }
@@ -47,10 +47,10 @@ function walkStatement(module, statement, path) {
  * @param {object} module  模块对象
  * @param {object} declarator
  */
-function walkVariableDeclarators(module, declarators, path) {
+function walkVariableDeclarators(module, declarators, path, async) {
   declarators.forEach(declarator => {
     if(declarator.type === 'VariableDeclarator' && declarator.init) {
-      walkExpression(module, declarator.init, path)
+      walkExpression(module, declarator.init, path, async)
     }
   })
 }
@@ -60,7 +60,7 @@ function walkVariableDeclarators(module, declarators, path) {
  * @param {object} module  模块对象
  * @param {object} expression 表达式
  */
-function walkExpression(module, expression, path) {
+function walkExpression(module, expression, path, async) {
   switch (expression.type) {
     case 'CallExpression':
       // 处理普通的require
@@ -71,7 +71,8 @@ function walkExpression(module, expression, path) {
         module.requires.push({
           name: param.value,
           filename: resolve(param.value, path),
-          nameRange: param.range
+          nameRange: param.range,
+          async: async
         })
       }
 
@@ -100,17 +101,17 @@ function walkExpression(module, expression, path) {
 
         // 处理require.ensure的函数体部分
         if(expression.arguments.length > 1) {
-          walkExpression(module, expression.arguments[1], path)
+          walkExpression(module, expression.arguments[1], path, true)
         }
       }
 
       // 处理匿名表达式,如 require('b')()
       if (expression.callee && !expression.callee.name) {
-        walkExpression(module, expression.callee, path)
+        walkExpression(module, expression.callee, path, async)
 
         // 处理连续调用的匿名表达式,如 require('a')(require('b'));
         if(expression.arguments && expression.arguments[0] && expression.arguments[0].type === 'CallExpression') {
-          walkExpressions(module, expression.arguments, path)
+          walkExpressions(module, expression.arguments, path, async)
         }
       }
 
@@ -118,14 +119,14 @@ function walkExpression(module, expression, path) {
     case 'FunctionExpression':
     case 'ArrowFunctionExpression':
       if (expression.body.type === 'BlockStatement') {
-        walkStatement(module, expression.body, path)
+        walkStatement(module, expression.body, path, async)
       }
   }
 }
 
-function walkExpressions(module, expressions, path) {
+function walkExpressions(module, expressions, path, async) {
   expressions.forEach(expression => {
-    walkExpression(module, expression, path)
+    walkExpression(module, expression, path, async)
   })
 }
 
